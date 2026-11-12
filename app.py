@@ -19,7 +19,14 @@ def load_data():
 
 @st.cache_resource
 def load_bundle():
-    return joblib.load(OUT / "app_model.joblib")
+    try:
+        return joblib.load(OUT / "app_model.joblib")
+    except Exception:
+        # Model file missing or saved with a different scikit-learn version -> rebuild it here (one-time, ~1 min)
+        import runpy
+        with st.spinner("Rebuilding the model for this environment (one-time)..."):
+            runpy.run_path(str(fu.BASE / "prepare_app_assets.py"))
+        return joblib.load(OUT / "app_model.joblib")
 
 @st.cache_data
 def load_csv(name, **kw):
